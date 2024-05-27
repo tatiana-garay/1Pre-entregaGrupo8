@@ -1,0 +1,31 @@
+{
+  "name": "1pre-entregagrupo8",
+  "version": "1.0.0",
+  "description": "tp",
+  "main": "servidor.js",
+  "scripts": {
+    "start": "node --watch servidor.js",
+    "dev": "nodemon servidor.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "end": "killal -9 node"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tatiana-garay/1Pre-entregaGrupo8.git"
+  },
+  "author": "Grupo8",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tatiana-garay/1Pre-entregaGrupo8/issues"
+  },
+  "homepage": "https://github.com/tatiana-garay/1Pre-entregaGrupo8#readme",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.1"
+  }
+}
