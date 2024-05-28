@@ -2,17 +2,16 @@ const express = require('express');
 const app = express();
 const path = require('path');
 const fs = require('fs');
-
 const dotenv = require('dotenv');
 dotenv.config();
-
-
 const port = process.env.PORT || 3008;
 
-app.set('views engine', 'ejs');
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'views')));
 
+const dataFilePath = path.join(__dirname, 'database', 'trailerflix.json');
 
+// Carga los datos del archivo JSON
 app.use((req, res, next) => {
     fs.readFile(dataFilePath, 'utf8', (err, data) => {
       if (err) {
@@ -21,7 +20,7 @@ app.use((req, res, next) => {
       }
   
       try {
-        req.TRAILERFLIX = JSON.parse(data);
+        req.trailerflix = JSON.parse(data);
         next();
       } catch (parseErr) {
         console.error('Error al parsear el archivo JSON:', parseErr);
@@ -29,24 +28,25 @@ app.use((req, res, next) => {
       }
     });
   });
-  
-  // Función para normalizar strings con tildes
-  function normalizeString(str) {
-    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  }
-  
-  // Rutas
-  app.get('/', (req, res) => {
+
+  //ruta de inicio
+app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'index.html'));
   });
-  
-  app.get('/catalogo', (req, res) => {
-    res.json(req.TRAILERFLIX);
+
+app.get('/catalogo', (req, res) => {
+    res.json(req.trailerflix);
   });
+
+    // Normaliza una cadena de texto eliminando tildes y convirtiéndola a minúsculas
+function normalizeString(string) {
+    return string.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  }
   
+  // Ruta para buscar una película por título
   app.get("/titulo/:title", (req, res) => {
     const title = normalizeString(req.params.title);
-    const filteredTitle = req.TRAILERFLIX.filter(trailer => normalizeString(trailer.titulo).includes(title));
+    const filteredTitle = req.trailerflix.filter (trailer => trailer.titulo.toLowerCase().includes(title.toLowerCase()));
     if (filteredTitle.length > 0) {
       res.json(filteredTitle.map(trailer => ({ titulo: trailer.titulo, reparto: trailer.reparto })));
     } else {
@@ -54,46 +54,47 @@ app.use((req, res, next) => {
     }
   });
   
-  app.get("/categoria/:cat", (req, res) => {
+
+// ruta para buscar categorias
+app.get('/categoria/:cat', (req, res) => {
     const cat = normalizeString(req.params.cat);
-    const filteredCategoria = req.TRAILERFLIX.filter(trailer => normalizeString(trailer.categoria).includes(cat));
-    if (filteredCategoria.length > 0) {
-      res.json(filteredCategoria);
+    const filteredCategory = req.trailerflix.filter(trailer => trailer.categoria.toLowerCase().includes(cat.toLowerCase()));
+    if (filteredCategory.length > 0) {
+      res.json(filteredCategory.map(trailer => ({ titulo: trailer.titulo, categoria: trailer.categoria })));
     } else {
-      res.status(404).json({ error: `¡Lo sentimos! No se encontraron ocurrencias en la categoría "${cat}".` });
+      res.status(404).json({ error: `¡Lo sentimos! No se encontraron categorias con el nombre "${cat}".` });
     }
   });
-  
-  app.get("/reparto/:act", (req, res) => {
-    const act = normalizeString(req.params.act);
-    const filteredActores = req.TRAILERFLIX.filter(trailer => normalizeString(trailer.reparto).includes(act));
-    
-    if (filteredActores.length > 0) {
-      res.json(filteredActores.map(trailer => ({ titulo: trailer.titulo, reparto: trailer.reparto })));
+
+//ruta para buscar por reparto
+app.get('/reparto/:actor', (req, res) => {
+    const actor = normalizeString(req.params.actor);
+    const filteredActor = req.trailerflix.filter(trailer => trailer.reparto.toLowerCase().includes(actor.toLowerCase()));
+    if (filteredActor.length > 0) {
+      res.json(filteredActor.map(trailer => ({ titulo: trailer.titulo, reparto: trailer.reparto })));
     } else {
-      res.status(404).json({ error: `¡Lo sentimos! No se encontraron referencias de "${act}".` });
+      res.status(404).json({ error: `¡Lo sentimos! No se encontraron actores con el nombre "${actor}".` });
     }
   });
-  
-  app.get("/trailer/:id", (req, res) => {
-    const id = parseInt(req.params.id, 10);
-    const filteredId = req.TRAILERFLIX.find(item => item.id === id);
-    if (filteredId) {
-      const result = {
-        id: filteredId.id,
-        titulo: filteredId.titulo,
-        trailer: filteredId.trailer || null
-      };
-      res.json(result);
+
+//ruta para buscar por trailer
+app.get('/trailer/:id', (req, res) => {
+    const id = normalizeString(req.params.id);
+    const filteredActor = req.trailerflix.filter(trailer => trailer.trailer.toLowerCase().includes(id.toLowerCase()));
+    if (filteredActor.length > 0) {
+      res.json(filteredActor.map(trailer => ({ titulo: trailer.titulo, trailer: trailer.trailer })));
     } else {
-      res.status(404).json({ error: `¡Lo sentimos! No se encontró ninguna serie o película con el ID "${id}".` });
+      res.status(404).json({ error: `¡Lo sentimos! No se encontraron actores con el nombre "${id}".` });
     }
   });
-  
-  // Manejo error de ruta no encontrada
-  app.use((req, res) => {
-    res.status(404).json({ error: 'Lo sentimos, no encontramos lo que buscas, intenta de nuevo. ' });
-  });
+
+
+
+
+
+
+
+
 
 app.listen(port, () => {
     console.log(`Servidor corriendo en http://localhost:${port}`);
